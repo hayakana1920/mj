@@ -1,0 +1,34 @@
+{
+  "last_updated": "2026-05-22",
+  "funds": [
+    {"name": "定期預金3本合計",                   "category": "元本確保型", "allocation": 10},
+    {"name": "三菱UFJ 国内債券インデックス",        "category": "国内債券",   "allocation": 23},
+    {"name": "三菱UFJ DC国内株式インデックス",      "category": "国内株式",   "allocation": 8},
+    {"name": "大和住銀DC日本バリュー株（黒潮）",    "category": "国内株式",   "allocation": 10},
+    {"name": "年金積立Jグロース",                  "category": "国内株式",   "allocation": 5},
+    {"name": "三菱UFJ DC海外債券インデックス",      "category": "外国債券",   "allocation": 5},
+    {"name": "DCダイワ新興国債券",                 "category": "外国債券",   "allocation": 5},
+    {"name": "三菱UFJ DC海外株式インデックス",      "category": "外国株式",   "allocation": 23},
+    {"name": "三菱UFJ DC新興国株式インデックス",    "category": "外国株式",   "allocation": 5},
+    {"name": "ラッセル・インベストメント外国株式",   "category": "外国株式",   "allocation": 6}
+  ],
+  "target_allocations": {
+    "元本確保型": 0,
+    "国内債券": 5,
+    "国内株式": 50,
+    "外国債券": 5,
+    "外国株式": 40
+  },
+  "plan": {
+    "current_balance_man": 725,
+    "monthly_contribution": 34300,
+    "retirement_age": 60,
+    "years_to_retirement": 2.83,
+    "ideco_after_retirement": true,
+    "ideco_monthly": 23000,
+    "ideco_years": 3,
+    "goal_man": 1500,
+    "goal_age": 63
+  },
+  "history": []
+}
