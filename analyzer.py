@@ -45,6 +45,22 @@ def _proportional_changes(funds_in_cat, total_change):
     return result
 
 
+def _fmt_pct(value):
+    rounded = round(value, 1)
+    if rounded == int(rounded):
+        return f"{int(rounded)}%"
+    return f"{rounded:.1f}%"
+
+
+def _fmt_amount_man(total_balance_man, allocation_points):
+    if not total_balance_man:
+        return None
+    amount_man = total_balance_man * allocation_points / 100
+    if amount_man >= 100:
+        return f"約{amount_man:.1f}万円"
+    return f"約{round(amount_man, 1)}万円"
+
+
 def _market_comment(market):
     movers = [
         (fund, info["変化率"])
@@ -73,6 +89,8 @@ def analyze(dry_run=False):
     funds = portfolio.get("funds", [])
     target = portfolio.get("target_allocations", {})
     current = _category_totals(funds)
+    plan = portfolio.get("plan", {})
+    total_balance_man = plan.get("current_balance_man")
 
     lines = []
 
@@ -117,12 +135,23 @@ def analyze(dry_run=False):
             tgt = target.get(cat, 0)
             cat_funds = _funds_in_category(funds, cat)
             changes = _proportional_changes(cat_funds, -diff)
-            lines.append(f"  [{cat}] 現在{cur:.0f}% → 目標{tgt:.0f}%（{diff:.0f}ポイント削減）")
+            lines.append(f"  [{cat}] 現在{_fmt_pct(cur)} → 目標{_fmt_pct(tgt)}（{_fmt_pct(diff)}分を売却）")
             for c in changes:
+                sell_points = abs(c["change"])
+                sell_ratio = (sell_points / c["current"] * 100) if c["current"] else 0
+                amount = _fmt_amount_man(total_balance_man, sell_points)
+                amount_text = f"、金額目安 {amount}" if amount else ""
+                action = f"売却: 保有数量の{_fmt_pct(sell_ratio)}（全体の{_fmt_pct(sell_points)}）{amount_text}"
                 if cat == "元本確保型":
-                    lines.append(f"    {c['name']}: {c['current']:.0f}% → {max(c['new'], 0):.0f}%（満期後に移換）")
+                    lines.append(
+                        f"    {c['name']}: {_fmt_pct(c['current'])} → {_fmt_pct(max(c['new'], 0))}"
+                        f"（{action}、満期後に移換）"
+                    )
                 else:
-                    lines.append(f"    {c['name']}: {c['current']:.0f}% → {max(c['new'], 0):.0f}%")
+                    lines.append(
+                        f"    {c['name']}: {_fmt_pct(c['current'])} → {_fmt_pct(max(c['new'], 0))}"
+                        f"（{action}）"
+                    )
         lines.append("")
 
     # 買い（比率を上げる）
@@ -133,15 +162,22 @@ def analyze(dry_run=False):
             tgt = target.get(cat, 0)
             cat_funds = _funds_in_category(funds, cat)
             changes = _proportional_changes(cat_funds, diff)
-            lines.append(f"  [{cat}] 現在{cur:.0f}% → 目標{tgt:.0f}%（{diff:.0f}ポイント増加）")
+            amount = _fmt_amount_man(total_balance_man, diff)
+            amount_text = f"、購入金額目安 {amount}" if amount else ""
+            lines.append(f"  [{cat}] 現在{_fmt_pct(cur)} → 目標{_fmt_pct(tgt)}（{_fmt_pct(diff)}分を購入{amount_text}）")
             for c in changes:
-                lines.append(f"    {c['name']}: {c['current']:.0f}% → {c['new']:.0f}%")
+                buy_points = abs(c["change"])
+                amount = _fmt_amount_man(total_balance_man, buy_points)
+                amount_text = f"、金額目安 {amount}" if amount else ""
+                lines.append(
+                    f"    {c['name']}: {_fmt_pct(c['current'])} → {_fmt_pct(c['new'])}"
+                    f"（購入: 全体の{_fmt_pct(buy_points)}{amount_text}）"
+                )
         lines.append("")
 
     lines.append("推奨アクション: 見直し推奨（DC画面でスイッチングを実施してください）")
 
     # 63歳時点の予測残高
-    plan = portfolio.get("plan", {})
     if plan and target:
         alloc_pct = {cat: pct / 100 for cat, pct in target.items()}
         rate = expected_return({cat: int(pct) for cat, pct in target.items()})
